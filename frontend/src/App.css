@@ -1,0 +1,46 @@
+.header{
+  padding-top: 12px;
+  background: white;
+}
+.content{
+  margin: 24px 16px;
+  padding: 20px;
+}
+
+.sider {
+  height: 100vh;
+  position: sticky !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.logo {
+  color: #214E34;
+  margin: 20px 0;
+  font-size: 45px;
+} 
+
+.trigger-btn{
+  font-size: 20px;
+  width: 60px;
+  height: 60px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  left: 10px;
+}
+
+.menu-bar{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-weight: 500;
+}
+.ant-menu-item-selected{
+  background-color: #DFF8EB !important;
+  color: rgb(34, 34, 34) !important;
+}
+
+
+/* buttons and colors */
