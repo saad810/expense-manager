@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { ConfigProvider } from 'antd'
-import { theme } from 'antd'
 const customTheme = {
   token: {
     colorPrimary: '#254D4D',
