@@ -105,14 +105,7 @@ const Profile = () => {
                 <Text type="secondary">Country</Text>
                 <Paragraph>{user.country}</Paragraph>
               </Col>
-              <Col span={12}>
-                <Text type="secondary">Website</Text>
-                <Paragraph>
-                  <a href={user.website} target="_blank" rel="noopener noreferrer">
-                    {user.website}
-                  </a>
-                </Paragraph>
-              </Col>
+
               <Col span={24}>
                 <Text type="secondary">About</Text>
                 <Paragraph>{user.about}</Paragraph>
@@ -183,23 +176,8 @@ const Profile = () => {
               </Form.Item>
             </Col>
 
-            <Col span={12}>
-              <Form.Item
-                label="Website"
-                name="website"
-              >
-                <Input placeholder="https://johndoe.dev" />
-              </Form.Item>
-            </Col>
 
-            <Col span={24}>
-              <Form.Item
-                label="Profile Picture URL"
-                name="profilePicture"
-              >
-                <Input placeholder="https://..." />
-              </Form.Item>
-            </Col>
+
 
             <Col span={24}>
               <Form.Item

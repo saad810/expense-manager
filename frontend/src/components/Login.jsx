@@ -1,20 +1,40 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Checkbox, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
+  const handleLogin = async (values) => {
     setLoading(true);
-    // Simulate API call for login
-    setTimeout(() => {
-      message.success('Login successful');
+    try {
+      // Simulate authentication (replace with actual API call)
+      const { username, password } = values;
+
+      // Simple mock check (replace with real authentication logic)
+      if (username === 'user' && password === 'password') {
+        // Set isAuthenticated in localStorage after successful login
+        localStorage.setItem('isAuthenticated', 'true');
+
+        // Update local state for authentication
+        setIsAuthenticated(true);
+
+        // If login is successful, redirect to the dashboard
+        message.success('Login successful!');
+        navigate('/');
+      } else {
+        // If credentials are incorrect
+        message.error('Invalid credentials!');
+      }
+    } catch (error) {
+      message.error('Login failed, please try again.');
+    } finally {
       setLoading(false);
-      // Redirect or other actions
-    }, 1000);
+    }
   };
 
   return (
@@ -24,13 +44,12 @@ const Login = () => {
         <Form
           name="login"
           initialValues={{ remember: true }}
-          onFinish={onFinish}
+          onFinish={handleLogin}
           style={styles.form}
         >
           <Form.Item
             name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
-          >
+            rules={[{ required: true, message: 'Please input your username!' }]}>
             <Input
               prefix={<UserOutlined />}
               placeholder="Username"
@@ -41,8 +60,7 @@ const Login = () => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
-          >
+            rules={[{ required: true, message: 'Please input your password!' }]}>
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Password"

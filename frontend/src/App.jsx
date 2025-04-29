@@ -5,9 +5,10 @@ import Dashboard from './pages/root'
 import Expenses from './pages/expenses'
 import Budgets from './pages/budgets'
 import Profile from './pages/profile'
-import Login from './pages/login'  // Import Login component
-import Signup from './pages/signup'  // Import Signup component
+
 import './App.css'
+import Login from './components/Login'
+import Signup from './components/SignUp'
 
 const App = () => {
   return (
