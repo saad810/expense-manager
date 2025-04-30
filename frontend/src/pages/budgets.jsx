@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Input, Table, Modal, Form, message, Flex, Tooltip } from 'antd';
 import { IoMdRefresh, IoMdAdd, IoMdTrash, IoMdCreate } from 'react-icons/io';
 import { PageWrapper } from '../components/common/layout';
+import { CreateBudgetModal } from '../components/utilities/CreateBudgetModal';
 
 // Budget component
 const Budgets = () => {
@@ -48,10 +49,10 @@ const Budgets = () => {
   };
 
   // Open the modal to add or edit a budget
-  const openModal = (budget = { category: '', amount: '', spending: '' }) => {
-    setEditingBudget(budget);
-    setIsModalOpen(true);
-  };
+  // const openModal = (budget = { category: '', amount: '', spending: '' }) => {
+  //   setEditingBudget(budget);
+  //   setIsModalOpen(true);
+  // };
 
   // Delete a budget
   const handleDelete = (id) => {
@@ -106,7 +107,7 @@ const Budgets = () => {
           >
 
           </Button>
-          <Button type="primary" onClick={() => openModal()} icon={<IoMdAdd />}>
+          <Button type="primary" onClick={() => setIsModalOpen(true)} icon={<IoMdAdd />}>
             Add Budget
           </Button>
 
@@ -121,6 +122,19 @@ const Budgets = () => {
         pagination={false}
         style={{ marginBottom: 20 }}
       />
+
+      {
+        isModalOpen && (
+          <CreateBudgetModal
+          isOpen={isModalOpen}
+          handleClose={() => setIsModalOpen(false)}
+          onCreate={handleAddEditBudget}
+          editingBudget={editingBudget}
+           
+           />
+        )
+          
+      }
 
     </PageWrapper>
 

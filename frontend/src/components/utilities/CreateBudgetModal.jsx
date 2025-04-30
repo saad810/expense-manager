@@ -20,7 +20,7 @@ const categories = [
     { value: 'Others', description: 'Miscellaneous expenses' },
 ];
 
-export const CreateBudgetModal = ({ isOpen, handleClose, onCreate }) => {
+export const CreateBudgetModal = ({ isOpen, handleClose }) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
@@ -85,14 +85,15 @@ export const CreateBudgetModal = ({ isOpen, handleClose, onCreate }) => {
                     />
                 </Form.Item>
 
-                <Form.Item
+                {/* <Form.Item
                     label="Month"
                     name="month"
-                    initialValue={dayjs().format('YYYY-MM')} // Format for the month
+                    initialValue={dayjs().format('YYYY-MM')}
+
                     rules={[{ required: true, message: 'Please select a month' }]}
                 >
                     <DatePicker.MonthPicker style={{ width: '100%' }} />
-                </Form.Item>
+                </Form.Item> */}
             </Form>
         </Modal>
     );
