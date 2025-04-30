@@ -16,7 +16,7 @@
 }
 
 .logo {
-  color: #214E34;
+  color: #2D9CDB;
   margin: 20px 0;
   font-size: 45px;
 } 
@@ -38,7 +38,7 @@
   font-weight: 500;
 }
 .ant-menu-item-selected{
-  background-color: #DFF8EB !important;
+  background-color: #56CCF2 !important;
   color: rgb(34, 34, 34) !important;
 }
 
