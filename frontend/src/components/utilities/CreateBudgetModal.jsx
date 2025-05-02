@@ -81,7 +81,7 @@ export const CreateBudgetModal = ({ isOpen, handleClose }) => {
                         min={0}
                         style={{ width: '100%' }}
                         placeholder="Enter limit"
-                        addonBefore="Rs"
+                        addonBefore="USD"
                     />
                 </Form.Item>
 
