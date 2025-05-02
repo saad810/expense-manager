@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { ConfigProvider } from 'antd'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { App as AntdApp } from 'antd';
+const queryClient = new QueryClient()
+
 const customTheme = {
   token: {
     colorPrimary: '#2D9CDB', // A vibrant blue
@@ -18,9 +22,12 @@ const customTheme = {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ConfigProvider theme={customTheme}>
-
-      <App />
-    </ConfigProvider>
-  </StrictMode>,
+    <QueryClientProvider client={queryClient}>
+      <ConfigProvider theme={customTheme}>
+        <AntdApp>
+          <App />
+        </AntdApp>
+      </ConfigProvider>
+    </QueryClientProvider>
+  </StrictMode >
 )

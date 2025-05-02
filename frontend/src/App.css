@@ -19,6 +19,7 @@
   color: #2D9CDB;
   margin: 20px 0;
   font-size: 45px;
+  text-align: center;
 } 
 
 .trigger-btn{
@@ -26,7 +27,7 @@
   width: 60px;
   height: 60px;
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   left: 10px;
 }

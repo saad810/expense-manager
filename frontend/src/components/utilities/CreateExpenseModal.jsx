@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Modal,
     Button,
@@ -7,34 +7,88 @@ import {
     InputNumber,
     DatePicker,
     Select,
-    message
+    message,
 } from 'antd';
 import dayjs from 'dayjs';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import categoryApi from '../../api/category';
+import expenseApi from '../../api/expense';
 
-const categories = [
-    { value: 'Food', description: 'Eating out, groceries, etc.' },
-    { value: 'Transport', description: 'Fuel, public transport, etc.' },
-    { value: 'Rent', description: 'Monthly house rent' },
-    { value: 'Utilities', description: 'Electricity, gas, water bills' },
-    { value: 'Entertainment', description: 'Movies, games, events' },
-    { value: 'Healthcare', description: 'Medicines, doctor visits' },
-    { value: 'Others', description: 'Miscellaneous expenses' },
-];
-
-export const CreateExpenseModal = ({ isOpen, handleClose }) => {
+export const CreateExpenseModal = ({
+    isOpen,
+    handleClose,
+    editingExpense,
+    onEdit,
+}) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
+    const queryClient = useQueryClient();
 
-    const handleCreate = async () => {
+    const { data, isLoading } = useQuery({
+        queryKey: ['categories'],
+        queryFn: categoryApi.getCategories,
+        onSuccess: (data) => {
+            console.log('Fetched categories:', data);
+        },
+    });
+
+    const { mutateAsync: createExpense } = useMutation({
+        mutationFn: expenseApi.createExpense,
+        onSuccess: () => {
+            message.success('Expense created successfully');
+        },
+        onError: (error) => {
+            console.error(error);
+            message.error('Failed to create expense');
+        },
+    });
+
+    useEffect(() => {
+        if (isOpen && data?.categories) {
+            if (editingExpense) {
+                const categoryId =
+                    typeof editingExpense.category === 'object'
+                        ? editingExpense.category._id
+                        : data.categories.find(
+                            (cat) =>
+                                cat._id === editingExpense.category ||
+                                cat.name === editingExpense.category
+                        )?._id;
+
+                form.setFieldsValue({
+                    category: categoryId ?? null,
+                    amount: editingExpense.amount ?? null,
+                    description: editingExpense.description ?? '',
+                    date: editingExpense.date ? dayjs(editingExpense.date) : null,
+                });
+            } else {
+                form.resetFields();
+            }
+        }
+    }, [isOpen, editingExpense, data?.categories, form]);
+
+    const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
             setLoading(true);
-            message.success('Expense created successfully');
+
+            const payload = {
+                ...values,
+                date: values.date.format('YYYY-MM-DD'),
+            };
+
+            if (editingExpense) {
+                await onEdit({ id: editingExpense._id, ...payload });
+            } else {
+                await createExpense(payload);
+            }
+
+            queryClient.invalidateQueries(['get-expenses']);
             form.resetFields();
             handleClose();
         } catch (err) {
             if (err?.response) message.error(err.response.data.message);
-            else if (err?.errorFields) return; // validation error
+            else if (err?.errorFields) return;
             else message.error('Something went wrong');
         } finally {
             setLoading(false);
@@ -43,13 +97,12 @@ export const CreateExpenseModal = ({ isOpen, handleClose }) => {
 
     return (
         <Modal
-            title="Create Expense"
+            title={editingExpense ? 'Edit Expense' : 'Create Expense'}
             open={isOpen}
             onCancel={handleClose}
-            // width={400}
             footer={
-                <Button type="primary" loading={loading} onClick={handleCreate}>
-                    Create
+                <Button type="primary" loading={loading} onClick={handleSubmit}>
+                    {editingExpense ? 'Update' : 'Create'}
                 </Button>
             }
         >
@@ -64,9 +117,9 @@ export const CreateExpenseModal = ({ isOpen, handleClose }) => {
                     rules={[{ required: true, message: 'Please select a category' }]}
                 >
                     <Select placeholder="Select category" popupMatchSelectWidth={false}>
-                        {categories.map((cat) => (
-                            <Select.Option key={cat.value} value={cat.value}>
-                                <strong>{cat.value}</strong> — {cat.description}
+                        {data?.categories.map((cat) => (
+                            <Select.Option key={cat._id} value={cat._id}>
+                                <strong>{cat.description}</strong> — {cat.description}
                             </Select.Option>
                         ))}
                     </Select>
@@ -92,7 +145,6 @@ export const CreateExpenseModal = ({ isOpen, handleClose }) => {
                 <Form.Item
                     label="Date"
                     name="date"
-                    initialValue={dayjs()}
                     rules={[{ required: true, message: 'Please pick a date' }]}
                 >
                     <DatePicker style={{ width: '100%' }} />

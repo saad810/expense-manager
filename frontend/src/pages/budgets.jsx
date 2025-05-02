@@ -1,75 +1,126 @@
-import React, { useState } from 'react';
-import { Button, Input, Table, Modal, Form, message, Flex, Tooltip } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Table, Grid, Tooltip, message, Flex } from 'antd';
 import { IoMdRefresh, IoMdAdd, IoMdTrash, IoMdCreate } from 'react-icons/io';
 import { PageWrapper } from '../components/common/layout';
 import { CreateBudgetModal } from '../components/utilities/CreateBudgetModal';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import budgetApi from '../api/budget';
+import getDateLabel from '../utils/date';
+import dayjs from 'dayjs';
 
-// Budget component
 const Budgets = () => {
-  // Sample data for budgets
-  const initialBudgets = [
-    { id: 1, category: 'Groceries', amount: 5000, spending: 1500 },
-    { id: 2, category: 'Entertainment', amount: 2000, spending: 800 },
-    { id: 3, category: 'Utilities', amount: 3000, spending: 2000 },
-  ];
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['get-budgets'],
+    queryFn: budgetApi.getBudgets,
+    onSuccess: (data) => {
+      console.log('Fetched data:', data);
+    },
+    onError: (error) => {
+      console.error('Error fetching budgets:', error);
+      message.error('Failed to load budgets');
+    },
+  });
 
-  const [budgets, setBudgets] = useState(initialBudgets);
+  const { mutateAsync: deleteBudget } = useMutation({
+    mutationFn: budgetApi.deleteBudget,
+    onSuccess: (data) => {
+      console.log('Budget deleted:', data);
+      message.success('Budget deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Error deleting budget:', error);
+      message.error('Failed to delete budget');
+    }
+  });
+
+  const { mutateAsync: editBudget } = useMutation({
+    mutationFn: budgetApi.updateBudget,
+    onSuccess: (data) => {
+      console.log('Budget updated:', data);
+      message.success('Budget updated successfully');
+    },
+    onError: (error) => {
+      console.error('Error updating budget:', error);
+      message.error('Failed to update budget');
+    }
+  });
+
+  const [budgets, setBudgets] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBudget, setEditingBudget] = useState({ category: '', amount: '', spending: '' });
+  const [editingBudget, setEditingBudget] = useState(null);
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
 
-  // Handle form changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditingBudget((prev) => ({ ...prev, [name]: value }));
+
+  useEffect(() => {
+    if (data?.budgets) {
+      setBudgets(data.budgets);
+    }
+  }, [data]);
+
+  const handleRefresh = async () => {
+    await refetch();
+    message.success('Budgets refreshed successfully');
   };
 
-  const handleRefresh = () => {
-    setBudgets(initialBudgets); // Reset to initial data
-    message.success('Budgets refreshed successfully');
-  }
-
-  // Add or Edit Budget
-  const handleAddEditBudget = () => {
-    if (editingBudget.id) {
+  const handleAddEditBudget = (budget) => {
+    if (editingBudget) {
       // Edit existing budget
-      setBudgets((prev) =>
-        prev.map((budget) =>
-          budget.id === editingBudget.id ? editingBudget : budget
-        )
-      );
+      editBudget(budget);
     } else {
       // Add new budget
-      setBudgets((prev) => [
-        ...prev,
-        { ...editingBudget, id: Date.now() }, // Unique id using Date.now()
-      ]);
     }
+    setEditingBudget(null);
     setIsModalOpen(false);
     message.success('Budget saved successfully');
   };
 
-  // Open the modal to add or edit a budget
-  // const openModal = (budget = { category: '', amount: '', spending: '' }) => {
-  //   setEditingBudget(budget);
-  //   setIsModalOpen(true);
-  // };
-
-  // Delete a budget
-  const handleDelete = (id) => {
-    setBudgets((prev) => prev.filter((budget) => budget.id !== id));
+  const handleDelete = async (id) => {
+    await deleteBudget(id);
+    refetch();
     message.success('Budget deleted successfully');
   };
 
-  // Budget columns for the table
+  const handleEdit = (budget) => {
+    setEditingBudget(budget);
+    setIsModalOpen(true);
+  };
+
+
   const columns = [
     { title: 'Category', dataIndex: 'category', key: 'category' },
     { title: 'Amount', dataIndex: 'amount', key: 'amount' },
-    { title: 'Spending', dataIndex: 'spending', key: 'spending' },
+    {
+      title: 'Date Created',
+      key: 'dateLabel',
+      render: (_, record) => {
+        const friendly = getDateLabel(record.startDate);
+        const actualDate = dayjs(record.startDate).format('DD-MM-YY');
+        return (
+          <Tooltip title={actualDate}>
+            <span>{friendly}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'End Date',
+      key: 'dateLabel',
+      render: (_, record) => {
+        const friendly = getDateLabel(record.endDate);
+        const actualDate = dayjs(record.endDate).format('DD-MM-YY');
+        return (
+          <Tooltip title={actualDate}>
+            <span>{friendly}</span>
+          </Tooltip>
+        );
+      },
+    },
     {
       title: 'Actions',
       key: 'actions',
-      render: (text, record) => (
-        <Flex gap={8}>
+      render: (_, record) => (
+        <div style={{ display: 'flex', gap: 8 }}>
           <Tooltip title="Edit">
             <Button
               icon={<IoMdCreate />}
@@ -81,65 +132,67 @@ const Budgets = () => {
           <Tooltip title="Delete">
             <Button
               icon={<IoMdTrash />}
-              onClick={() => handleDelete(record)}
+              onClick={() => handleDelete(record._id)}
               shape="circle"
               size="small"
               danger
             />
           </Tooltip>
-        </Flex>
+        </div>
       ),
     },
   ];
 
+
   return (
-
-
     <PageWrapper
-      title={'Budgets'}
-      description={'Manage your budgets here.'}
+      title="Budget"
+      description="Manage your budgets here."
       action={
-        <Flex justify="end" align="middle" gap={12}>
+        <Flex
+          justify={screens.xs ? 'center' : 'end'}
+          align="middle"
+          wrap="wrap"
+          gap={12}
+        >
           <Button
             type="default"
             icon={<IoMdRefresh size={20} />}
-            onClick={handleRefresh} // Trigger refresh on click
+            onClick={handleRefresh}
           >
-
+            Refresh
           </Button>
-          <Button type="primary" onClick={() => setIsModalOpen(true)} icon={<IoMdAdd />}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setEditingBudget(null);
+              setIsModalOpen(true);
+            }}
+            icon={<IoMdAdd />}
+          >
             Add Budget
           </Button>
-
         </Flex>
 
       }
     >
+
       <Table
         dataSource={budgets}
         columns={columns}
-        rowKey="id"
-        pagination={false}
-        style={{ marginBottom: 20 }}
+        rowKey="_id"
+        loading={isLoading}
+        pagination={true}
+        scroll={{ x: 'max-content' }}
       />
 
-      {
-        isModalOpen && (
-          <CreateBudgetModal
-          isOpen={isModalOpen}
-          handleClose={() => setIsModalOpen(false)}
-          onCreate={handleAddEditBudget}
-          editingBudget={editingBudget}
-           
-           />
-        )
-          
-      }
-
+      <CreateBudgetModal
+        isOpen={isModalOpen}
+        handleClose={() => setIsModalOpen(false)}
+        editingBudget={editingBudget}
+        onEdit={handleAddEditBudget}
+      />
     </PageWrapper>
-
-
-
   );
 };
 

@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const expenseSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
-  category: { type: String, required: true }, // e.g., 'Food', 'Transport'
-  note: { type: String },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  description: { type: String },
   date: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now }
 });

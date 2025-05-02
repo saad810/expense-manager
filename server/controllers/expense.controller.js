@@ -1,4 +1,5 @@
 // CRUD expenses
+import Category from '../models/category.models.js';
 import Expense from '../models/expense.models.js';
 
 const userID = "6814e9fb80952b09b0e3dfd8"
@@ -6,11 +7,15 @@ const userID = "6814e9fb80952b09b0e3dfd8"
 export const getAllExpenses = async (req, res) => {
     try {
         // const/ userID = req.user.id;
-        const expenses = await Expense.find({ userId: userID }).populate('userId', 'email');
+        const expenses = await Expense.find({ userId: userID }).populate('userId', 'email').populate('category', 'name');
+        const plainExpenses = expenses.map((expense) => ({
+            ...expense.toObject(),
+            category: expense.category?.name || 'Unknown',
+        }));
         res.status(200).json(
             {
                 message: "Expenses fetched successfully",
-                expenses
+                expenses:plainExpenses
             });
     } catch (error) {
         res.status(500).json({ message: "Error fetching expenses", error });
@@ -23,10 +28,17 @@ export const createExpense = async (req, res) => {
     try {
         // const userID = req.user.id;
         const { category, amount, date } = req.body;
+        console.log(req.body);
 
         if (!category || !amount || !date) {
             return res.status(400).json({ message: "Category, amount and date are required" });
         }
+
+        const findCategory = await Category.findById(category);
+        if (!findCategory) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
 
         const newExpense = new Expense({
             userId: userID,

@@ -1,148 +1,136 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PageWrapper } from '../components/common/layout';
-import { Button, Flex, Table, Select, Tooltip, Card, Statistic } from 'antd';
-import { IoMdRefresh, IoMdCreate, IoMdTrash, IoMdAdd } from 'react-icons/io';
+import {
+  Button,
+  Flex,
+  Table,
+  Tooltip,
+  Card,
+  Statistic,
+  Spin,
+  message,
+  Row,
+  Col,
+  Grid,
+} from 'antd';
+import {
+  IoMdRefresh,
+  IoMdCreate,
+  IoMdTrash,
+  IoMdAdd,
+} from 'react-icons/io';
 import { CreateExpenseModal } from '../components/utilities/CreateExpenseModal';
 import moment from 'moment';
-import { MdDoNotDisturb } from "react-icons/md";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import AnalyticsApi from '../api/analytics';
+import expenseApi from '../api/expense';
 
-// Sample expense data
-const sampleExpenses = [
-  { category: 'Food', amount: 500, date: '2025-03-01', description: 'Groceries' },
-  { category: 'Transport', amount: 1500, date: '2025-04-20', description: 'Fuel' },
-  { category: 'Rent', amount: 20000, date: '2024-10-01', description: 'Monthly rent' },
-  { category: 'Entertainment', amount: 1200, date: '2025-04-15', description: 'Movie tickets' },
-  { category: 'Healthcare', amount: 3000, date: '2025-04-01', description: 'Medicine' },
-  { category: 'Utilities', amount: 2500, date: '2025-03-15', description: 'Electricity bill' },
-  { category: 'Food', amount: 2000, date: '2025-04-25', description: 'Dining out' },
-];
-
-// Suggested categories and budget values
-const categoryBudgets = {
-  Food: 1000,
-  Transport: 1000,
-  Rent: 20000,
-  Entertainment: 1000,
-  Healthcare: 2000,
-  Utilities: 2500,
-};
-
-// Get savings suggestion function
-const getSavingsSuggestion = (expenses) => {
-  let totalSpending = 0;
-  let totalBudget = 0;
-  let overspentCategories = [];
-  let potentialSavings = [];
-
-  // Calculate overspend or savings
-  expenses.forEach((expense) => {
-    const budget = categoryBudgets[expense.category] || 1000; // Default budget is 1000 if not defined
-    totalSpending += expense.amount;
-    totalBudget += budget;
-
-    if (expense.amount > budget) {
-      overspentCategories.push(expense.category);
-    } else {
-      const savings = budget - expense.amount;
-      if (savings > 0) potentialSavings.push({ category: expense.category, savings });
-    }
-  });
-
-  return {
-    totalSpending,
-    totalBudget,
-    overspentCategories: overspentCategories || [],
-    potentialSavings: potentialSavings || [],
-  };
-};
+const { useBreakpoint } = Grid;
 
 const Expenses = () => {
+  const screens = useBreakpoint();
   const [isOpen, setIsOpen] = useState(false);
-  const [expenses, setExpenses] = useState(sampleExpenses);
-  const [filteredExpenses, setFilteredExpenses] = useState(sampleExpenses);
-  const [dateFilter, setDateFilter] = useState('');
-  const [savingsData, setSavingsData] = useState({
-    totalSpending: 0,
-    totalBudget: 0,
-    overspentCategories: [],
-    potentialSavings: [],
+  const [editingExpense, setEditingExpense] = useState(null);
+  const queryClient = useQueryClient();
+
+  const {
+    isLoading: loadingSavingsData,
+    data: savingsData,
+    refetch: refetchSavingsData,
+  } = useQuery({
+    queryKey: ['get-analytics-one'],
+    queryFn: () => AnalyticsApi.getAnalyticsOne(),
+    onError: () => message.error('Failed to load analytics'),
   });
 
-  useEffect(() => {
-    // Update savings suggestions based on current expenses
-    setSavingsData(getSavingsSuggestion(expenses));
-  }, [expenses]);
+  const {
+    data: fetchedExpenses,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['get-expenses'],
+    queryFn: () => expenseApi.getall(),
+    onError: () => message.error('Failed to load expenses'),
+  });
 
-  // Handle Refresh Expenses
+  const { mutateAsync: deleteExpenses } = useMutation({
+    mutationFn: expenseApi.deleteExpense,
+    onSuccess: () => {
+      message.success('Expense deleted successfully');
+      refetch();
+    },
+    onError: () => message.error('Failed to delete expense'),
+  });
+
+  const { mutateAsync: updateExpense } = useMutation({
+    mutationFn: expenseApi.updateExpense,
+    onSuccess: () => {
+      message.success('Expense updated successfully');
+      refetch();
+    },
+    // onError: () => message.error('Failed to update expense'),
+  });
+
   const handleRefresh = () => {
-    setExpenses([...sampleExpenses]);
-    setFilteredExpenses([...sampleExpenses]); // Reset filters on refresh
+    refetch();
+    refetchSavingsData();
   };
 
-  // Sorting logic for date categories
-  const getDateCategory = (date) => {
-    const expenseDate = moment(date);
-    const today = moment();
-    const diffInDays = today.diff(expenseDate, 'days');
-
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays <= 7) return 'Week Ago';
-    if (diffInDays <= 30) return 'Month Ago';
-    if (diffInDays <= 365) return 'Year Ago';
-    return 'Older';
+  const handleEdit = (record) => {
+    setEditingExpense(record);
+    setIsOpen(true);
   };
 
-  // Filter expenses based on the selected filter
-  const handleDateFilter = (value) => {
-    setDateFilter(value);
-    if (value === '') {
-      setFilteredExpenses(expenses);
-    } else {
-      setFilteredExpenses(expenses.filter((expense) => getDateCategory(expense.date) === value));
+  const handleDelete = async (record) => {
+    try {
+      await deleteExpenses(record._id);
+    } catch (error) {
+      // Already handled by mutation
     }
   };
 
-  // Handle Edit and Delete actions
-  const handleEdit = (record) => {
-    console.log('Edit expense:', record);
+  const handleExpenseUpdate = async (expense) => {
+    if (expense.id) {
+      const { id, ...data } = expense;
+      await updateExpense({ id, data });
+    }
+    setIsOpen(false);
+    setEditingExpense(null);
   };
 
-  const handleDelete = (record) => {
-    setExpenses(expenses.filter((expense) => expense.date !== record.date || expense.category !== record.category));
-    setFilteredExpenses(filteredExpenses.filter((expense) => expense.date !== record.date || expense.category !== record.category));
-  };
-
-  // Table columns for displaying expenses
   const columns = [
-    { title: 'Category', dataIndex: 'category', key: 'category' },
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      render: (category) => category || '—',
+    },
     {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
       render: (text) => `Rs ${text}`,
-      sorter: (a, b) => a.amount - b.amount,
     },
     {
       title: 'Date',
       dataIndex: 'date',
       key: 'date',
       render: (text) => moment(text).format('YYYY-MM-DD'),
-      sorter: (a, b) => moment(a.date).isBefore(b.date) ? -1 : 1,
     },
     { title: 'Description', dataIndex: 'description', key: 'description' },
     {
       title: 'Actions',
       key: 'actions',
-      render: (text, record) => (
+      render: (_, record) => (
         <Flex gap={8}>
-          <Tooltip title="Edit">
+          {/* <Tooltip title="Edit">
             <Button
               icon={<IoMdCreate />}
               onClick={() => handleEdit(record)}
               shape="circle"
               size="small"
             />
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip title="Delete">
             <Button
               icon={<IoMdTrash />}
@@ -159,25 +147,10 @@ const Expenses = () => {
 
   return (
     <PageWrapper
-      title={'Expenses'}
-      description={'Manage your expenses here.'}
+      title="Expenses"
+      description="Manage your expenses here."
       action={
-        <Flex justify="end" align="middle" gap={12}>
-          {/* Date Filter */}
-          <Select
-            style={{ width: 150 }}
-            value={dateFilter}
-            onChange={handleDateFilter}
-            placeholder="Filter by date"
-          >
-            <Select.Option value="">All</Select.Option>
-            <Select.Option value="Today">Today</Select.Option>
-            <Select.Option value="Week Ago">Week Ago</Select.Option>
-            <Select.Option value="Month Ago">Month Ago</Select.Option>
-            <Select.Option value="Year Ago">Year Ago</Select.Option>
-          </Select>
-
-          {/* Refresh Button */}
+        <Flex justify="end" align="middle" wrap gap={12}>
           <Button
             type="default"
             icon={<IoMdRefresh size={20} />}
@@ -185,11 +158,12 @@ const Expenses = () => {
           >
             Refresh
           </Button>
-
-          {/* Add Expense Button */}
           <Button
             type="primary"
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+              setEditingExpense(null);
+              setIsOpen(true);
+            }}
             icon={<IoMdAdd />}
           >
             Add Expense
@@ -197,66 +171,81 @@ const Expenses = () => {
         </Flex>
       }
     >
-      {/* CreateExpenseModal */}
       {isOpen && (
-        <CreateExpenseModal isOpen={isOpen} handleClose={() => setIsOpen(false)} />
+        <CreateExpenseModal
+          isOpen={isOpen}
+          handleClose={() => {
+            setIsOpen(false);
+            setEditingExpense(null);
+          }}
+          editingExpense={editingExpense}
+          onEdit={handleExpenseUpdate}
+        />
       )}
 
-      {/* Automated Savings Suggestions - Displaying as Numeric Cards */}
-      <Flex direction="row" justify="space-between" gap={16} style={{ marginBottom: '20px' }}>
-        <Card bordered={false} style={{ width: 240, textAlign: 'center' }}>
-          <Statistic
-            title="Total Spending"
-            value={savingsData.totalSpending}
-            prefix="USD"
-            valueStyle={{ color: '#cf1322' }} // Red for spending
-          />
-        </Card>
+      {loadingSavingsData ? (
+        <Spin />
+      ) : (
+        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Card>
+              <Statistic
+                title="Total Spending"
+                value={savingsData?.analytics.totalSpending}
+                prefix="Rs"
+                valueStyle={{ color: '#cf1322' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Card>
+              <Statistic
+                title="Total Budget"
+                value={savingsData?.analytics.totalBudget}
+                prefix="Rs"
+                valueStyle={{ color: '#3f8600' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Card>
+              <Statistic
+                title="Overspent Category"
+                value={savingsData?.analytics.overspentCategories?.length || 'None'}
+                valueStyle={{ color: '#cf1322' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Card>
+              <Statistic
+                title="Potential Savings"
+                value={savingsData?.analytics.potentialSavings || 0}
+                prefix="Rs"
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Card>
+              <Statistic
+                title="Remaining Budget"
+                value={savingsData?.analytics.remainingBudget}
+                prefix="Rs"
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
-        <Card bordered={false} style={{ width: 240, textAlign: 'center' }}>
-          <Statistic
-            title="Total Budget"
-            value={savingsData.totalBudget}
-            prefix="USD"
-            valueStyle={{ color: '#3f8600' }} // Green for budget
-          />
-        </Card>
-
-        <Card bordered={false} style={{ width: 240, textAlign: 'center' }}>
-          <Statistic
-            title="Overspent Categories"
-            value={savingsData.overspentCategories.length || 0} // Ensure it's a number
-            valueStyle={{ color: '#cf1322' }} // Red for overspent
-          />
-        </Card>
-
-        <Card bordered={false} style={{ width: 240, textAlign: 'center' }}>
-          <Statistic
-            title="Potential Savings"
-            value={savingsData.potentialSavings.reduce((total, item) => total + item.savings, 0) || 0} // Ensure total is a number
-            prefix="USD"
-            valueStyle={{ color: '#52c41a' }} // Green for savings
-          />
-        </Card>
-
-        {/* Remaining Budget Card */}
-        <Card bordered={false} style={{ width: 240, textAlign: 'center' }}>
-          <Statistic
-            title="Remaining Budget"
-            value={savingsData.totalBudget - savingsData.totalSpending}
-            prefix="USD"
-            valueStyle={{ color: '#1890ff' }} // Blue for remaining budget
-          />
-        </Card>
-      </Flex>
-
-      {/* Display Expenses in a Table */}
       <Table
-        dataSource={filteredExpenses}
+        dataSource={fetchedExpenses?.expenses}
         columns={columns}
-        rowKey={(record) => record.date + record.category} // Unique key for each row
-        pagination={false}
-        style={{ marginTop: '20px' }}
+        rowKey="_id"
+        pagination={{ pageSize: 10 }}
+        loading={isLoading}
+        scroll={{ x: 'max-content' }}
       />
     </PageWrapper>
   );
