@@ -11,9 +11,11 @@ export const getAllUsers = async (req, res) => {
     }
 }
 
-export const getUserById = async (req, res) => {
+export const getUserStatus = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+
+        console.log("User ID:", req.user); // Log the user ID for debugging
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -65,24 +67,28 @@ export const createUser = async (req, res) => {
 };
 export const loginUser = async (req, res) => {
     try {
+        console.log("Login User Controller Called");
+        console.log("Request Body:", req.body); // Log the request body for debugging
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-        const userFound = await User.find({ email });
+        const userFound = await User.findOne({ email });
         if (!userFound) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
+        // match pawwords
 
-        const isMatch = userFound.comparePassword(password);
+        const isMatch = await bcrypt.compare(password, userFound.password);
+
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
         const token = jwt.sign(
-            { id: newUser._id, email: newUser.email },
+            { id: userFound._id, email: userFound.email },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRATION || "7d" }
         );
@@ -90,7 +96,6 @@ export const loginUser = async (req, res) => {
         // Respond
         res.status(200).json({
             message: "Login successful",
-            user: { id: user._id, email: user.email },
             token,
         });
 
@@ -100,27 +105,27 @@ export const loginUser = async (req, res) => {
         console.error("Error logging in user:", error);
     }
 }
-
 export const updateUser = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, email, phoneNumber, address } = req.body;
-        if (!name || !email || !phoneNumber || !address) {
-            return res.status(400).json({ message: "All fields are required" });
-        }
+        const { name, email, phoneNumber, address, country, about, occupation } = req.body;
 
+        // Update the user information in the database
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { name, email, phoneNumber, address },
+            { name, email, phoneNumber, address, country, about, occupation },
             { new: true }
         );
+
+        // Check if the user was found and updated
         if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
+        // Return the updated user information
         res.status(200).json(updatedUser);
     } catch (error) {
+        // Handle any errors that occur during the update
         res.status(500).json({ message: "Error updating user", error });
     }
 }
-

@@ -15,21 +15,39 @@ import {
 import { EditOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import AutomatedSavingsSuggestions from "../components/common/AutomatedSavingsSuggestions";
+import { useMutation, useQuery } from '@tanstack/react-query';
+import userApi from '../api/user';
+import toast from 'react-hot-toast';
 
 const { Title, Text, Paragraph } = Typography;
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    profilePicture: "https://randomuser.me/api/portraits/men/32.jpg",
-    phone: "+1 234 567 890",
-    country: "United States",
-    occupation: "Software Engineer",
-    website: "https://johndoe.dev",
-    about: "Passionate software developer with 5+ years of experience in building modern web applications."
+  const { data: user, isLoading, isError, refetch, error } = useQuery({
+    queryKey: ["get-user"],
+    queryFn: () => userApi.getStatus(),
+
+
+    onError: () => {
+      console.error("Error fetching user data:", error);
+
+    },
+
   });
+
+  const { mutateAsync: updateUser } = useMutation({
+    mutationFn: userApi.updateUser,
+    onSuccess: () => {
+      message.success('User updated successfully');
+      toast.success('User updated successfully');
+    },
+    onError: (error) => {
+      console.error(error);
+      message.error('Failed to update user');
+      toast.error('Failed to update user');
+    },
+  });
+
 
   const [form] = useForm();
 
@@ -44,8 +62,12 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      console.log('Form values:', values);
+      await updateUser(values);
+      await refetch(); // Refetch user data after update
       setUser(values);
       message.success('Profile updated successfully');
+      form.resetFields(); // Reset form fields after successful update
       setIsEditing(false);
     } catch {
       message.error('Please check the fields again');
@@ -99,7 +121,7 @@ const Profile = () => {
               </Col>
               <Col span={12}>
                 <Text type="secondary">Phone</Text>
-                <Paragraph>{user.phone}</Paragraph>
+                <Paragraph>{user.phoneNumber}</Paragraph>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Country</Text>
@@ -114,7 +136,7 @@ const Profile = () => {
           </Col>
         </Row>
       </Card>
-      <AutomatedSavingsSuggestions />
+      {/* <AutomatedSavingsSuggestions /> */}
       <Modal
         title="Edit Profile"
         open={isEditing}
@@ -152,7 +174,7 @@ const Profile = () => {
             <Col span={12}>
               <Form.Item
                 label="Phone"
-                name="phone"
+                name="phoneNumber"
               >
                 <Input placeholder="+1 234 567 890" />
               </Form.Item>

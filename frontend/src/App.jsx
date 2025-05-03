@@ -1,5 +1,5 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import MainLayout from './layouts/main'
 import Dashboard from './pages/root'
 import Expenses from './pages/expenses'
@@ -9,18 +9,36 @@ import Profile from './pages/profile'
 import './App.css'
 import Login from './components/Login'
 import Signup from './components/Signup'
+import Home from './pages/home'
+
+import PrivateRoute from './components/PrivateRoute'
+import News from './pages/news'
 
 const App = () => {
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Assuming you store the token in localStorage as a string and check if it exists
+    const authToken = localStorage.getItem('authToken')
+    if (authToken) {
+      setLoggedIn(true)  // If token exists, user is logged in
+    } else {
+      setLoggedIn(false)  // No token means user is logged out
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* Routes for authenticated users */}
-        <Route path="" element={<MainLayout />}>
+        <Route path="/" element={loggedIn ? <Navigate to="/app" /> : <Home />} />
+
+        {/* Private Route wrapper for all /app routes */}
+        <Route path="app" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="budgets" element={<Budgets />} />
           <Route path="profile" element={<Profile />} />
-          {/* Add more routes here */}
+          <Route path="news" element={<News />} />
         </Route>
 
         {/* Routes for login/signup pages */}

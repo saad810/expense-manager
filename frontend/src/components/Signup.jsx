@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Checkbox, Typography, message } from 'antd';
+import React from 'react';
+import { Form, Input, Button, Checkbox, Typography, Spin } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import userApi from '../api/user';
+import toast from 'react-hot-toast';
 
 const { Title } = Typography;
 
 const Signup = () => {
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
 
-  const onFinish = (values) => {
-    setLoading(true);
-    // Simulate API call for signup
-    setTimeout(() => {
-      message.success('Signup successful');
-      setLoading(false);
-      // Redirect to login or other actions
-    }, 1000);
+  const { mutateAsync: signup, isLoading } = useMutation({
+    mutationFn: userApi.createUser,
+    onSuccess: (data) => {
+      toast.success(data.message || 'User created successfully!');
+      console.log('User created:', data);
+
+      // Save token to localStorage
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+      }
+
+      form.resetFields();
+      navigate('/app');
+    },
+    onError: (error) => {
+      const message =
+        error?.response?.data?.message || 'Failed to create user';
+      toast.error(message);
+      console.error('Signup error:', error);
+    },
+  });
+
+  const onFinish = async (values) => {
+    const payload = {
+      email: values.email,
+      password: values.password,
+      confirmPassword: values.confirm,
+    };
+    await signup(payload);
   };
 
   return (
@@ -22,6 +48,7 @@ const Signup = () => {
       <div style={styles.card}>
         <Title level={2} style={styles.title}>Sign Up</Title>
         <Form
+          form={form}
           name="signup"
           initialValues={{ remember: true }}
           onFinish={onFinish}
@@ -34,18 +61,6 @@ const Signup = () => {
             <Input
               prefix={<MailOutlined />}
               placeholder="Email"
-              size="large"
-              style={styles.input}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Username"
               size="large"
               style={styles.input}
             />
@@ -73,7 +88,9 @@ const Signup = () => {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject('The two passwords do not match!');
+                  return Promise.reject(
+                    new Error('The two passwords do not match!')
+                  );
                 },
               }),
             ]}
@@ -86,7 +103,20 @@ const Signup = () => {
             />
           </Form.Item>
 
-          <Form.Item name="terms" valuePropName="checked" rules={[{ required: true, message: 'You must accept the terms and conditions!' }]}>
+          <Form.Item
+            name="terms"
+            valuePropName="checked"
+            rules={[
+              {
+                validator: (_, value) =>
+                  value
+                    ? Promise.resolve()
+                    : Promise.reject(
+                        new Error('You must accept the terms and conditions!')
+                      ),
+              },
+            ]}
+          >
             <Checkbox>
               I agree to the <a href="#">terms and conditions</a>
             </Checkbox>
@@ -98,7 +128,7 @@ const Signup = () => {
               htmlType="submit"
               block
               size="large"
-              loading={loading}
+              loading={isLoading}
               style={styles.submitButton}
             >
               Sign Up
@@ -106,9 +136,15 @@ const Signup = () => {
           </Form.Item>
 
           <Form.Item style={styles.loginPrompt}>
-            Already have an account? <a href="#">Log in</a>
+            Already have an account? <a href="/login">Log in</a>
           </Form.Item>
         </Form>
+
+        {isLoading && (
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Spin tip="Signing up..." />
+          </div>
+        )}
       </div>
     </div>
   );

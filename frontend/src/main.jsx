@@ -5,6 +5,8 @@ import App from './App.jsx'
 import { ConfigProvider } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntdApp } from 'antd';
+import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from './context/auth.jsx'
 const queryClient = new QueryClient()
 
 const customTheme = {
@@ -23,11 +25,24 @@ const customTheme = {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ConfigProvider theme={customTheme}>
-        <AntdApp>
-          <App />
-        </AntdApp>
-      </ConfigProvider>
+      <AuthProvider>
+        <ConfigProvider theme={customTheme}>
+          <AntdApp>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                className: '',
+                duration: 3000,
+                style: {
+                  background: '#333',
+                  color: '#fff',
+                },
+              }}
+            />
+            <App />
+          </AntdApp>
+        </ConfigProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode >
 )

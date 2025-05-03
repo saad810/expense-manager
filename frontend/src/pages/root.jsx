@@ -74,7 +74,7 @@ const Dashboard = () => {
   }, [spendingData]);
 
   if (loadingSavingsData || loadingSpendingsData) {
-    return <Spin size="large" />;
+    return <Spin size="large" fullscreen={true} />;
   }
 
   return (

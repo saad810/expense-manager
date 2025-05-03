@@ -1,0 +1,187 @@
+/* home.css */
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.app-header {
+    background: #fff;
+    padding: 0 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    width: 100%;
+    position: sticky;
+    top: 0;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: auto;
+    /* max-width: 1200px; */
+    margin: 0 auto;
+    /* height: 64px; */
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    white-space: nowrap;
+}
+
+.header-nav {
+    display: flex;
+    gap: 24px;
+    margin-left: auto;
+    align-items: center;
+    font-size: 16px;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 12px;
+    margin-left: 16px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .header-nav {
+        display: none;
+        /* Hide nav on mobile, can be replaced with hamburger later */
+    }
+
+    .header-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+}
+
+
+
+#root,
+.ant-layout {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Header & Footer */
+.ant-layout-header,
+.ant-layout-footer {
+    background-color: #fff;
+    z-index: 10;
+}
+
+.ant-layout-header {
+    position: sticky;
+    top: 0;
+    box-shadow: 0 2px 8px #f0f1f7;
+    padding: 0 24px;
+}
+
+.ant-layout-footer {
+    text-align: center;
+    background-color: #f0f2f5;
+    padding: 24px 50px;
+}
+
+/* Content Area */
+.ant-layout-content {
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow-x: hidden;
+}
+
+/* Sections */
+.section {
+    padding: 80px 50px;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.section-light {
+    background-color: #fff;
+}
+
+.section-dark {
+    background-color: #f0f2f5;
+}
+
+/* Header Styles */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1890ff;
+    display: flex;
+    align-items: center;
+}
+
+.logo svg {
+    margin-right: 8px;
+    height: 32px;
+}
+
+.header-nav {
+    border-bottom: none;
+    line-height: 64px;
+    margin-left: 20px;
+}
+
+.header-buttons .ant-btn {
+    margin-left: 8px;
+}
+
+/* Footer */
+.footer-icon {
+    font-size: 20px;
+    color: #555;
+}
+
+.footer-link {
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #1890ff;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 768px) {
+    .header-nav {
+        display: none;
+    }
+
+    .section {
+        padding: 60px 20px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .cta-section .cta-content {
+        padding: 0 20px;
+    }
+}

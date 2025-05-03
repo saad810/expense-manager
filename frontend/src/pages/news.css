@@ -1,0 +1,55 @@
+/* news.css */
+
+/* Page Wrapper */
+.page-wrapper {
+    padding: 20px;
+}
+
+/* Card Styles */
+.news-card {
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+/* Title Styles */
+.news-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* Description Styles */
+.news-description {
+    color: #666;
+    margin-bottom: 12px;
+}
+
+/* Link Styles */
+.news-link {
+    color: #1890ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Grid Layout Styles */
+.news-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+/* Responsive Grid Styles */
+@media (min-width: 768px) {
+    .news-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .news-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}

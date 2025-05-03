@@ -2,38 +2,47 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Checkbox, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useMutation } from '@tanstack/react-query';
+import userApi from '../api/user';
+import { useAuth } from '../context/auth';
 
 const { Title } = Typography;
 
-const Login = ({ setIsAuthenticated }) => {
+const Login = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const { login } = useAuth(); // Get user data from context
+  const { mutateAsync: loginAcc, isLoading: loading } = useMutation({
+    mutationFn: userApi.loginUser,
+    onSuccess: (data) => {
+      message.success(data.message || 'Login successful!');
+      console.log('Login successful:', data);
+      if (data.token) {
+        // localStorage.setItem('authToken', data.token);
+        login(data?.token); // Call the login function from context
+        // setIsAuthenticated(true);
+        navigate('/app'); // Redirect to the app page after successful login
+      }
+    },
+    onError: (error) => {
+      const message = error?.response?.data?.message || 'Login failed';
+      console.log('Login error:', error);
+      message.error(message);
+    },
+  });
 
   const handleLogin = async (values) => {
-    setLoading(true);
+    const payload = {
+      email: values.username,
+      password: values.password,
+    };
+
     try {
-      // Simulate authentication (replace with actual API call)
-      const { username, password } = values;
+      await loginAcc(payload);
 
-      // Simple mock check (replace with real authentication logic)
-      if (username === 'user' && password === 'password') {
-        // Set isAuthenticated in localStorage after successful login
-        localStorage.setItem('isAuthenticated', 'true');
-
-        // Update local state for authentication
-        setIsAuthenticated(true);
-
-        // If login is successful, redirect to the dashboard
-        message.success('Login successful!');
-        navigate('/');
-      } else {
-        // If credentials are incorrect
-        message.error('Invalid credentials!');
-      }
     } catch (error) {
-      message.error('Login failed, please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Login error:', error);
     }
   };
 
@@ -49,7 +58,8 @@ const Login = ({ setIsAuthenticated }) => {
         >
           <Form.Item
             name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}>
+            rules={[{ required: true, message: 'Please input your username!' }]}
+          >
             <Input
               prefix={<UserOutlined />}
               placeholder="Username"
@@ -60,7 +70,8 @@ const Login = ({ setIsAuthenticated }) => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}>
+            rules={[{ required: true, message: 'Please input your password!' }]}
+          >
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Password"

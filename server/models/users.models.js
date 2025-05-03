@@ -13,7 +13,22 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-  
+    phoneNumber: {
+        type: String,
+        // required: true,
+    },
+    country: {
+        type: String,
+        // required: true,
+    },
+    occupation: {
+        type: String,
+    },
+    about: {
+        type: String,
+    },
+
+
 }, { timestamps: true });
 
 
