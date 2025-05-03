@@ -2,31 +2,41 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import userApi from "../api/user";
 import { Alert, Spin } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
+    const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("authToken"));
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
-    const { data: user, isLoading, isError, refetch, error } = useQuery({
+    const {
+        data: user,
+        isLoading,
+        isError,
+        refetch,
+        error,
+    } = useQuery({
         queryKey: ["get-user"],
         queryFn: () => userApi.getStatus(),
         enabled: !!token,
         retry: false,
-        
-        onError: () => {
-            console.error("Error fetching user data:", error);
-            logout();
-        },
-        
     });
 
-    const login = async (token) => {
-        localStorage.setItem("authToken", token);
-        setToken(token);
+    // Effect to handle auth failure
+    useEffect(() => {
+        if (isError || (!user && !isLoading)) {
+            logout();
+            navigate("/login");
+        }
+    }, [isError, user, isLoading]);
+
+    const login = async (newToken) => {
+        localStorage.setItem("authToken", newToken);
+        setToken(newToken);
         setIsAuthenticated(true);
         await refetch();
     };
@@ -49,14 +59,6 @@ export const AuthProvider = ({ children }) => {
         >
             {isLoading ? (
                 <Spin fullscreen={true} size="large" tip="Loading" />
-            ) : isError ? (
-                <Alert
-                    closable
-                    type="error"
-                    message="Error fetching user data"
-                    description={error?.message || "Something went wrong. Please try again later."}
-                    onClose={() => logout()} // Optional: log out the user on error
-                />
             ) : (
                 children
             )}

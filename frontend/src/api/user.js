@@ -7,6 +7,7 @@ const userApi = {
     createUser: (data) => axios.post('/users', data),
     loginUser: (data) => axios.post('/users/login', data),
     updateUser: (data) => axios.put('/users', data),
+    deleteUser: () => axios.delete(`/users`),
 }
 
 export default userApi; 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Checkbox, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
@@ -101,7 +101,7 @@ const Login = () => {
           </Form.Item>
 
           <Form.Item style={styles.signUpPrompt}>
-            Don't have an account? <a href="#">Sign up</a>
+            Don't have an account? <Link to="/signup">Sign up</Link>
           </Form.Item>
         </Form>
       </div>

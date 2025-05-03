@@ -13,12 +13,14 @@ import dayjs from 'dayjs';
 import categoryApi from '../../api/category';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import budgetApi from '../../api/budget';
+import toast from 'react-hot-toast';
 
 export const CreateBudgetModal = ({
     isOpen,
     handleClose,
     editingBudget,
     onEdit,
+    refetch,
 }) => {
     // console.log('Editing Budget:', editingBudget); // Log editingBudget for debugging
     const [loading, setLoading] = useState(false);
@@ -74,7 +76,8 @@ export const CreateBudgetModal = ({
             mutationFn: budgetApi.createBudget,
             onSuccess: (data) => {
                 console.log(data);
-                message.success('Budget created successfully');
+                refetch()
+                toast.success('Budget created successfully');
             },
             onError: (error) => {
                 console.error(error);

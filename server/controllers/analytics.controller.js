@@ -2,27 +2,119 @@ import mongoose from "mongoose";
 import { getTotalSpending, getTotalBudget, getOverspentCategories, getPotentialSavings, getRemainingBudget } from "../services/analytics.services.js";
 import Budget from "../models/budget.models.js";
 import Expense from "../models/expense.models.js";
+import { hasEmailBeenSentToday } from "../utils/email_send.js";
 
-const userId = "6814e9fb80952b09b0e3dfd8"
+// const userId = "6814e9fb80952b09b0e3dfd8"
 
 export const analyticsOne = async (req, res) => {
     try {
-        console.log("Analytics One Controller Called");
-        // const userId = req.user.id;
+        const userId = req.user.id;
         const totalSpending = await getTotalSpending(userId);
-        console.log('Total Spending:', totalSpending);
 
         const totalBudget = await getTotalBudget(userId);
-        console.log('Total Budget:', totalBudget);
 
         const overspentCategories = await getOverspentCategories(userId);
-        console.log('Overspent Categories:', overspentCategories);
 
         const potentialSavings = await getPotentialSavings(userId);
-        console.log('Potential Savings:', potentialSavings);
 
         const remainingBudget = await getRemainingBudget(userId);
-        console.log('Remaining Budget:', remainingBudget);
+
+        // sending email
+        const budgetThreshold = totalBudget * 0.9;  // 90% threshold
+        const isBudgetApproaching = totalSpending >= budgetThreshold;
+        if (isBudgetApproaching) {
+            const hasEmailSent = hasEmailBeenSentToday(req.user.email, "budget-approaching")
+            if (!hasEmailSent) {
+                const emailOptions = {
+                    to: req.user.email,
+                    subject: "Budget Approaching",
+                    html: advancedMinimalTemplate({
+                        title: "Budget Approaching",
+                        message: `Your budget is <strong>Approaching</strong>, Start saving today for your goals`,
+                        footer: "Smart Finance",
+                    }),
+                };
+
+                try {
+                    await sendEmail(emailOptions);
+
+                    // Log the sent email
+                    await Email.create({
+                        status: 'sent',
+                        reason: 'budget-approaching', // or a more specific reason if you define one like 'budget-deletion'
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+                } catch (error) {
+                    console.error("❌ Error sending email:", error);
+
+                    // Log the failed email
+                    await Email.create({
+                        status: 'failed',
+                        reason: 'budget-approaching',
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+
+                    return res.status(500).json({ message: "Error sending email", error });
+                }
+
+            }
+        }
+
+        const budgetExceeded = totalSpending > totalBudget;
+        const hasExceededSent = hasEmailBeenSentToday(req.user.email, "budget-exceeded")
+        if (budgetExceeded) {
+            if (!hasExceededSent) {
+                const emailOptions = {
+                    to: req.user.email,
+                    subject: "Budget Exceeded",
+                    html: advancedMinimalTemplate({
+                        title: "Budget Exceeded",
+                        message: `Your budget has been <strong>Exceeded</strong>, Start saving today for your goals`,
+                        footer: "Smart Finance",
+                    }),
+                };
+
+                try {
+                    await sendEmail(emailOptions);
+
+                    // Log the sent email
+                    await Email.create({
+                        status: 'sent',
+                        reason: 'budget-exceeded', // or a more specific reason if you define one like 'budget-deletion'
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+                } catch (error) {
+                    console.error("❌ Error sending email:", error);
+
+                    // Log the failed email
+                    await Email.create({
+                        status: 'failed',
+                        reason: 'budget-exceeded',
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+
+                    return res.status(500).json({ message: "Error sending email", error });
+                }
+
+            }
+        }
+
 
         res.status(200).json({
             message: "Analytics fetched successfully",
@@ -44,8 +136,7 @@ export const analyticsOne = async (req, res) => {
 export const analyticsTwo = async (req, res) => {
     try {
         // const { userId } = req.params;
-
-        // Step 1: Get all the budgets for the user and aggregate them by category
+        const userId = req.user.id;
         const budgets = await Budget.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
@@ -69,13 +160,13 @@ export const analyticsTwo = async (req, res) => {
         // Step 2: Get all the expenses for the user, grouped by category and populate category names
         const expenses = await Expense.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-            { 
+            {
                 $group: {
                     _id: '$category',  // Group by category ID
                     totalSpent: { $sum: '$amount' },  // Sum all amounts spent in each category
                 },
             },
-            { 
+            {
                 $lookup: {
                     from: 'categories',  // Categories collection to populate category data
                     localField: '_id',    // The category ID in the expense document

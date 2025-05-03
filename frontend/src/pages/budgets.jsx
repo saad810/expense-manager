@@ -7,6 +7,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import budgetApi from '../api/budget';
 import getDateLabel from '../utils/date';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 
 const Budgets = () => {
   const { data, isLoading, refetch } = useQuery({
@@ -21,7 +22,7 @@ const Budgets = () => {
     },
   });
 
-  const { mutateAsync: deleteBudget } = useMutation({
+  const { mutateAsync: deleteBudget,isLoading:loadDeletingBudget } = useMutation({
     mutationFn: budgetApi.deleteBudget,
     onSuccess: (data) => {
       console.log('Budget deleted:', data);
@@ -51,6 +52,7 @@ const Budgets = () => {
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
 
+  
 
   useEffect(() => {
     if (data?.budgets) {
@@ -60,7 +62,7 @@ const Budgets = () => {
 
   const handleRefresh = async () => {
     await refetch();
-    message.success('Budgets refreshed successfully');
+    toast.success('Budgets refreshed successfully');
   };
 
   const handleAddEditBudget = (budget) => {
@@ -191,6 +193,7 @@ const Budgets = () => {
         handleClose={() => setIsModalOpen(false)}
         editingBudget={editingBudget}
         onEdit={handleAddEditBudget}
+        refetch = {refetch}
       />
     </PageWrapper>
   );

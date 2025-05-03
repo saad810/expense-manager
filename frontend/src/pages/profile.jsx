@@ -12,12 +12,14 @@ import {
   Typography,
   Space,
 } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import AutomatedSavingsSuggestions from "../components/common/AutomatedSavingsSuggestions";
 import { useMutation, useQuery } from '@tanstack/react-query';
 import userApi from '../api/user';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/auth';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -26,13 +28,9 @@ const Profile = () => {
   const { data: user, isLoading, isError, refetch, error } = useQuery({
     queryKey: ["get-user"],
     queryFn: () => userApi.getStatus(),
-
-
     onError: () => {
       console.error("Error fetching user data:", error);
-
     },
-
   });
 
   const { mutateAsync: updateUser } = useMutation({
@@ -47,9 +45,27 @@ const Profile = () => {
       toast.error('Failed to update user');
     },
   });
+  const navigate = useNavigate();
+  const { logout } = useAuth
 
+  const { mutateAsync: deleteUser } = useMutation({
+    mutationFn: userApi.deleteUser,
+    onSuccess: () => {
+      message.success('User account deleted successfully');
+      toast.success('User account deleted successfully');
+      // logout(); // Call logout function to clear user session
+      navigate('/login'); // Redirect to the home page after deletion
+      // Redirect to a different page after deletion (e.g., home page)
+    },
+    onError: (error) => {
+      console.error(error);
+      message.error('Failed to delete user account');
+      toast.error('Failed to delete user account');
+    },
+  });
 
   const [form] = useForm();
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
   useEffect(() => {
     form.setFieldsValue(user);
@@ -74,19 +90,44 @@ const Profile = () => {
     }
   };
 
+  const showDeleteModal = () => {
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    deleteUser(); // Call delete user API
+    setIsDeleteModalVisible(false); // Close the modal after deletion
+  };
+
   return (
     <>
       <Card
         title="User Profile"
         extra={
-          <Button
-            icon={<EditOutlined />}
-            onClick={handleEditClick}
-            type="primary"
-          // shape="round"
-          >
-            Edit
-          </Button>
+          <Space>
+            <Button
+              icon={<EditOutlined />}
+              onClick={handleEditClick}
+              type="primary"
+            >
+              Edit
+            </Button>
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={showDeleteModal}
+              type="primary" // Use "primary" type to override the default color
+              style={{
+                marginLeft: 8,
+                backgroundColor: 'red', // Background color
+                color: 'white', // Text color
+                borderColor: 'red', // Border color
+                fontWeight: 'bold', // Optional: Make the text bolder
+              }}
+            >
+              Delete My Account
+            </Button>
+
+          </Space>
         }
         style={{
           width: '100%',
@@ -107,36 +148,35 @@ const Profile = () => {
                 marginBottom: 16,
               }}
             >
-              {user.name?.charAt(0).toUpperCase()}
+              {user?.name?.charAt(0).toUpperCase()}
             </Avatar>
 
-            <Title level={4}>{user.name}</Title>
-            <Text type="secondary">{user.occupation}</Text>
+            <Title level={4}>{user?.name}</Title>
+            <Text type="secondary">{user?.occupation}</Text>
           </Col>
           <Col xs={24} md={18}>
             <Row gutter={[16, 16]}>
               <Col span={12}>
                 <Text type="secondary">Email</Text>
-                <Paragraph>{user.email}</Paragraph>
+                <Paragraph>{user?.email}</Paragraph>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Phone</Text>
-                <Paragraph>{user.phoneNumber}</Paragraph>
+                <Paragraph>{user?.phoneNumber}</Paragraph>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Country</Text>
-                <Paragraph>{user.country}</Paragraph>
+                <Paragraph>{user?.country}</Paragraph>
               </Col>
 
               <Col span={24}>
                 <Text type="secondary">About</Text>
-                <Paragraph>{user.about}</Paragraph>
+                <Paragraph>{user?.about}</Paragraph>
               </Col>
             </Row>
           </Col>
         </Row>
       </Card>
-      {/* <AutomatedSavingsSuggestions /> */}
       <Modal
         title="Edit Profile"
         open={isEditing}
@@ -198,9 +238,6 @@ const Profile = () => {
               </Form.Item>
             </Col>
 
-
-
-
             <Col span={24}>
               <Form.Item
                 label="About"
@@ -211,6 +248,22 @@ const Profile = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      {/* Confirmation Modal for Deleting Account */}
+      <Modal
+        title="Delete Account"
+        open={isDeleteModalVisible}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        onOk={handleDelete}
+        okText="Delete"
+        cancelText="Cancel"
+        centered
+        width={400}
+      >
+        <Typography.Paragraph>
+          Are you sure you want to delete your account? This action is irreversible, and you will lose all your data.
+        </Typography.Paragraph>
       </Modal>
     </>
   );

@@ -1,6 +1,9 @@
 import User from "../models/users.models.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import Email from "../models/email.model.js";
+import { advancedMinimalTemplate } from "../utils/emailTempaltes.js";
+import sendEmail from "../utils/email.js";
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -54,6 +57,48 @@ export const createUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRATION || "7d" }
         );
+
+               const emailOptions = {
+                    to: newUser?.email,
+                    subject: "Welcome to Smart Finance",
+                    html: advancedMinimalTemplate({
+                        title: "Account Created",
+                        message: `Your Account for <strong>Smart Finance</strong>, has been Created successfully.`,
+                        footer: "Smart Finance",
+                    }),
+                };
+        
+                try {
+                    // await newBudget.save();
+                    await sendEmail(emailOptions);
+        
+                    // Log the sent email
+                    await Email.create({
+                        status: 'sent',
+                        reason: 'create-account', // or a more specific reason if you define one like 'budget-deletion'
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+                } catch (error) {
+                    console.error("❌ Error sending email:", error);
+        
+                    // Log the failed email
+                    await Email.create({
+                        status: 'failed',
+                        reason: 'create-account',
+                        emailData: {
+                            to: emailOptions.to,
+                            subject: emailOptions.subject,
+                            html: emailOptions.html,
+                        },
+                    });
+        
+                    return res.status(500).json({ message: "Error sending email", error });
+                }
+        
 
         res.status(201).json({
             message: "User created successfully",
@@ -127,5 +172,67 @@ export const updateUser = async (req, res) => {
     } catch (error) {
         // Handle any errors that occur during the update
         res.status(500).json({ message: "Error updating user", error });
+    }
+}
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log("User ID:", userId); // Log the user ID for debugging
+
+        // Delete the user from the database
+        const deletedUser = await User.findByIdAndDelete(userId);
+
+        // Check if the user was found and deleted
+        if (!deletedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const emailOptions = {
+            to: deletedUser?.email,
+            subject: "sORRY TO SEE YOU GO",
+            html: advancedMinimalTemplate({
+                title: "Account deleted",
+                message: `Your Account for <strong>Smart Finance</strong>, has been Deleted successfully.`,
+                footer: "Smart Finance",
+            }),
+        };
+
+        try {
+            // await newBudget.save();
+            await sendEmail(emailOptions);
+
+            // Log the sent email
+            await Email.create({
+                status: 'sent',
+                reason: 'delete-account', // or a more specific reason if you define one like 'budget-deletion'
+                emailData: {
+                    to: emailOptions.to,
+                    subject: emailOptions.subject,
+                    html: emailOptions.html,
+                },
+            });
+        } catch (error) {
+            console.error("❌ Error sending email:", error);
+
+            // Log the failed email
+            await Email.create({
+                status: 'failed',
+                reason: 'delete-account',
+                emailData: {
+                    to: emailOptions.to,
+                    subject: emailOptions.subject,
+                    html: emailOptions.html,
+                },
+            });
+
+            return res.status(500).json({ message: "Error sending email", error });
+        }
+
+        // Return a success message
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        // Handle any errors that occur during the deletion
+        res.status(500).json({ message: "Error deleting user", error });
     }
 }

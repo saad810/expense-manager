@@ -9,6 +9,6 @@ router.get('/status',auth, controller.getUserStatus);
 router.post('/', controller.createUser);
 router.post('/login', controller.loginUser);
 router.put('/', auth, controller.updateUser);
-// router.put('/:id', controller.updateUser);
+router.delete('/',auth, controller.deleteUser);
 
 export default router;

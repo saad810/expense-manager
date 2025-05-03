@@ -28,24 +28,23 @@ const App = () => {
   }, [])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={loggedIn ? <Navigate to="/app" /> : <Home />} />
+    <Routes>
+      <Route path="/" element={loggedIn ? <Navigate to="/app" /> : <Home />} />
 
-        {/* Private Route wrapper for all /app routes */}
-        <Route path="app" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-          <Route index element={<Dashboard />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="budgets" element={<Budgets />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="news" element={<News />} />
-        </Route>
+      {/* Private Route wrapper for all /app routes */}
+      <Route path="app" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+        <Route index element={<Dashboard />} />
+        <Route path="expenses" element={<Expenses />} />
+        <Route path="budgets" element={<Budgets />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="news" element={<News />} />
+      </Route>
 
-        {/* Routes for login/signup pages */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-      </Routes>
-    </BrowserRouter>
+      {/* Routes for login/signup pages */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+    </Routes>
+
   )
 }
 
