@@ -192,7 +192,7 @@ const Expenses = () => {
               <Statistic
                 title="Total Spending"
                 value={savingsData?.analytics.totalSpending}
-                prefix="Rs"
+                prefix="$"
                 valueStyle={{ color: '#cf1322' }}
               />
             </Card>
@@ -202,7 +202,7 @@ const Expenses = () => {
               <Statistic
                 title="Total Budget"
                 value={savingsData?.analytics.totalBudget}
-                prefix="Rs"
+                prefix="$"
                 valueStyle={{ color: '#3f8600' }}
               />
             </Card>
@@ -221,7 +221,7 @@ const Expenses = () => {
               <Statistic
                 title="Potential Savings"
                 value={savingsData?.analytics.potentialSavings || 0}
-                prefix="Rs"
+                prefix="$"
                 valueStyle={{ color: '#52c41a' }}
               />
             </Card>
@@ -231,7 +231,7 @@ const Expenses = () => {
               <Statistic
                 title="Remaining Budget"
                 value={savingsData?.analytics.remainingBudget}
-                prefix="Rs"
+                prefix="$"
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>

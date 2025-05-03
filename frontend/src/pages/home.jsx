@@ -248,11 +248,6 @@ const AppFooter = () => {
     return (
         <AntFooter className="app-footer">
             <Space direction="vertical" size="middle" style={{ width: '100%', alignItems: 'center' }}>
-                <Space size="large">
-                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><TwitterOutlined className="footer-icon" /></a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><LinkedinOutlined className="footer-icon" /></a>
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer"><GithubOutlined className="footer-icon" /></a>
-                </Space>
                 <Space>
                     <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="footer-link">Privacy Policy</a>
                     <Text type="secondary">|</Text>

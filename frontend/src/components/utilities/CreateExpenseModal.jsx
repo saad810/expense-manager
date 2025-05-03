@@ -134,7 +134,7 @@ export const CreateExpenseModal = ({
                         min={0}
                         style={{ width: '100%' }}
                         placeholder="Enter amount"
-                        addonBefore="Rs"
+                        addonBefore="$"
                     />
                 </Form.Item>
 

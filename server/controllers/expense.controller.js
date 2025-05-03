@@ -2,11 +2,11 @@
 import Category from '../models/category.models.js';
 import Expense from '../models/expense.models.js';
 
-const userID = "6814e9fb80952b09b0e3dfd8"
+// const userID = "6814e9fb80952b09b0e3dfd8"
 
 export const getAllExpenses = async (req, res) => {
     try {
-        // const/ userID = req.user.id;
+        const userID = req.user.id;
         const expenses = await Expense.find({ userId: userID }).populate('userId', 'email').populate('category', 'name');
         const plainExpenses = expenses.map((expense) => ({
             ...expense.toObject(),
@@ -26,7 +26,7 @@ export const getAllExpenses = async (req, res) => {
 
 export const createExpense = async (req, res) => {
     try {
-        // const userID = req.user.id;
+        const userID = req.user.id;
         const { category, amount, date } = req.body;
         console.log(req.body);
 
@@ -60,7 +60,7 @@ export const createExpense = async (req, res) => {
 
 export const updateExpense = async (req, res) => {
     try {
-        // const userID = req.user.id;
+        const userID = req.user.id;
         const { expenseId } = req.params;
         const { category, amount, date } = req.body;
 
@@ -88,7 +88,7 @@ export const updateExpense = async (req, res) => {
 }
 export const deleteExpense = async (req, res) => {
     try {
-        // const userID = req.user.id;
+        const userID = req.user.id;
         const { expenseId } = req.params;
 
         const deletedExpense = await Expense.findOneAndDelete({ _id: expenseId, userId: userID });
