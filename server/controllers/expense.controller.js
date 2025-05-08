@@ -6,8 +6,11 @@ import Expense from '../models/expense.models.js';
 
 export const getAllExpenses = async (req, res) => {
     try {
+
         const userID = req.user.id;
+        
         const expenses = await Expense.find({ userId: userID }).populate('userId', 'email').populate('category', 'name');
+        // console.log(expenses);
         const plainExpenses = expenses.map((expense) => ({
             ...expense.toObject(),
             category: expense.category?.name || 'Unknown',
@@ -23,15 +26,13 @@ export const getAllExpenses = async (req, res) => {
 }
 
 // create
-
 export const createExpense = async (req, res) => {
     try {
         const userID = req.user.id;
-        const { category, amount, date } = req.body;
-        console.log(req.body);
+        const { category, amount, date, expenseType, description } = req.body;
 
-        if (!category || !amount || !date) {
-            return res.status(400).json({ message: "Category, amount and date are required" });
+        if (!category || !amount || !date || !expenseType) {
+            return res.status(400).json({ message: "Category, amount, date and type are required" });
         }
 
         const findCategory = await Category.findById(category);
@@ -39,12 +40,13 @@ export const createExpense = async (req, res) => {
             return res.status(404).json({ message: "Category not found" });
         }
 
-
         const newExpense = new Expense({
             userId: userID,
             category,
             amount,
-            date
+            date,
+            expenseType,
+            description,
         });
 
         await newExpense.save();
@@ -56,21 +58,22 @@ export const createExpense = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Error creating expense", error });
     }
-}
+};
+
 
 export const updateExpense = async (req, res) => {
     try {
         const userID = req.user.id;
         const { expenseId } = req.params;
-        const { category, amount, date } = req.body;
+        const { category, amount, date, expenseType, description } = req.body;
 
-        if (!category || !amount || !date) {
-            return res.status(400).json({ message: "Category, amount and date are required" });
+        if (!category || !amount || !date || !expenseType) {
+            return res.status(400).json({ message: "Category, amount, date and type are required" });
         }
 
         const updatedExpense = await Expense.findOneAndUpdate(
             { _id: expenseId, userId: userID },
-            { category, amount, date },
+            { category, amount, date, expenseType, description },
             { new: true }
         );
 
@@ -85,7 +88,8 @@ export const updateExpense = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Error updating expense", error });
     }
-}
+};
+
 export const deleteExpense = async (req, res) => {
     try {
         const userID = req.user.id;

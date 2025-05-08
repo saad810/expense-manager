@@ -35,11 +35,11 @@ export const CreateExpenseModal = ({
     const { mutateAsync: createExpense } = useMutation({
         mutationFn: expenseApi.createExpense,
         onSuccess: () => {
-            message.success('Expense created successfully');
+            message.success('Transaction created successfully');
         },
         onError: (error) => {
             console.error(error);
-            message.error('Failed to create expense');
+            message.error('Failed to create transaction');
         },
     });
 
@@ -60,6 +60,7 @@ export const CreateExpenseModal = ({
                     amount: editingExpense.amount ?? null,
                     description: editingExpense.description ?? '',
                     date: editingExpense.date ? dayjs(editingExpense.date) : null,
+                    type: editingExpense.type ?? null,
                 });
             } else {
                 form.resetFields();
@@ -75,7 +76,10 @@ export const CreateExpenseModal = ({
             const payload = {
                 ...values,
                 date: values.date.format('YYYY-MM-DD'),
+                expenseType: values.type,
+                description: values.description ?? '',
             };
+            delete payload.type;
 
             if (editingExpense) {
                 await onEdit({ id: editingExpense._id, ...payload });
@@ -97,7 +101,7 @@ export const CreateExpenseModal = ({
 
     return (
         <Modal
-            title={editingExpense ? 'Edit Expense' : 'Create Expense'}
+            title={editingExpense ? 'Edit Transaction' : 'Create Transaction'}
             open={isOpen}
             onCancel={handleClose}
             footer={
@@ -112,6 +116,17 @@ export const CreateExpenseModal = ({
                 style={{ maxHeight: '70vh', overflowY: 'auto' }}
             >
                 <Form.Item
+                    label="Transaction Type"
+                    name="type"
+                    rules={[{ required: true, message: 'Please select transaction type' }]}
+                >
+                    <Select placeholder="Select transaction type">
+                        <Select.Option value="expense">Expense</Select.Option>
+                        <Select.Option value="income">Income</Select.Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
                     label="Category"
                     name="category"
                     rules={[{ required: true, message: 'Please select a category' }]}
@@ -119,7 +134,7 @@ export const CreateExpenseModal = ({
                     <Select placeholder="Select category" popupMatchSelectWidth={false}>
                         {data?.categories.map((cat) => (
                             <Select.Option key={cat._id} value={cat._id}>
-                                <strong>{cat.description}</strong> — {cat.description}
+                                <strong>{cat.name}</strong> — {cat.description}
                             </Select.Option>
                         ))}
                     </Select>
@@ -134,7 +149,7 @@ export const CreateExpenseModal = ({
                         min={0}
                         style={{ width: '100%' }}
                         placeholder="Enter amount"
-                        addonBefore="$"
+                        addonBefore="£"
                     />
                 </Form.Item>
 

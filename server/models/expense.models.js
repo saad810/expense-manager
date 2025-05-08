@@ -6,7 +6,12 @@ const expenseSchema = new mongoose.Schema({
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   description: { type: String },
   date: { type: Date, required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  expenseType:  {
+    type: String,
+    enum: ['income', 'expense'],
+    required: true,
+  }
 });
 
 const Expense = mongoose.model('Expense', expenseSchema);

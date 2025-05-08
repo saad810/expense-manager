@@ -15,21 +15,9 @@ import PrivateRoute from './components/PrivateRoute'
 import News from './pages/news'
 
 const App = () => {
-  const [loggedIn, setLoggedIn] = useState(false)
-
-  useEffect(() => {
-    // Assuming you store the token in localStorage as a string and check if it exists
-    const authToken = localStorage.getItem('authToken')
-    if (authToken) {
-      setLoggedIn(true)  // If token exists, user is logged in
-    } else {
-      setLoggedIn(false)  // No token means user is logged out
-    }
-  }, [])
-
   return (
     <Routes>
-      <Route path="/" element={loggedIn ? <Navigate to="/app" /> : <Home />} />
+      <Route index element={<Home />} />
 
       {/* Private Route wrapper for all /app routes */}
       <Route path="app" element={<PrivateRoute><MainLayout /></PrivateRoute>}>

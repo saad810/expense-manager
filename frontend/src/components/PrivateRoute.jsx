@@ -7,16 +7,9 @@ const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Optional: Debug log for auth state
-  useEffect(() => {
-    console.log("Auth status changed:", { isAuthenticated, loading });
-    
-  }, [isAuthenticated, loading]);
-
-  if (loading) return <Spin fullscreen tip="Checking authentication..." />;
+  if (loading) return <Spin fullscreen tip="Loading ..." />;
 
   if (!isAuthenticated) {
-    // Redirect to login and preserve location they tried to access
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

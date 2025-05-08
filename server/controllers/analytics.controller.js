@@ -135,71 +135,98 @@ export const analyticsOne = async (req, res) => {
 
 export const analyticsTwo = async (req, res) => {
     try {
-        // const { userId } = req.params;
         const userId = req.user.id;
+
+        // Step 1: Aggregate budgets grouped by category
         const budgets = await Budget.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $group: {
-                    _id: '$category',  // Group by category ID
-                    totalBudget: { $sum: '$amount' },  // Sum all budgets in the same category
+                    _id: '$category',
+                    totalBudget: { $sum: '$amount' },
                 },
             },
             {
                 $lookup: {
-                    from: 'categories',  // Assuming 'categories' is the name of your Category model
-                    localField: '_id',    // Matching the category ID
-                    foreignField: '_id',  // In the Category model
+                    from: 'categories',
+                    localField: '_id',
+                    foreignField: '_id',
                     as: 'categoryData',
                 },
             },
-            { $unwind: '$categoryData' },  // Flatten category data
-            { $project: { category: '$categoryData.name', totalBudget: 1, _id: 0 } },
+            { $unwind: '$categoryData' },
+            {
+                $project: {
+                    categoryId: '$_id',
+                    category: '$categoryData.name',
+                    totalBudget: 1,
+                    _id: 0,
+                },
+            },
         ]);
 
-        // Step 2: Get all the expenses for the user, grouped by category and populate category names
+        // Step 2: Aggregate expenses grouped by category and expenseType
         const expenses = await Expense.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $group: {
-                    _id: '$category',  // Group by category ID
-                    totalSpent: { $sum: '$amount' },  // Sum all amounts spent in each category
+                    _id: { category: '$category', expenseType: '$expenseType' },
+                    totalSpent: { $sum: '$amount' },
                 },
             },
             {
                 $lookup: {
-                    from: 'categories',  // Categories collection to populate category data
-                    localField: '_id',    // The category ID in the expense document
-                    foreignField: '_id',  // Matching the _id of the category in the Category model
+                    from: 'categories',
+                    localField: '_id.category',
+                    foreignField: '_id',
                     as: 'categoryData',
                 },
             },
-            { $unwind: '$categoryData' },  // Flatten category data
-            { $project: { category: '$categoryData.name', totalSpent: 1, _id: 0 } },
+            { $unwind: '$categoryData' },
+            {
+                $project: {
+                    categoryId: '$_id.category',
+                    expenseType: '$_id.expenseType',
+                    category: '$categoryData.name',
+                    totalSpent: 1,
+                    _id: 0,
+                },
+            },
         ]);
 
-        // Log budgets and expenses to understand their structure
-        console.log("Budgets: ", budgets);
-        console.log("Expenses: ", expenses);
+        console.log("Budgets:", budgets);
+        console.log("Expenses:", expenses);
 
-        // Step 3: Combine the budget and expense data by category
+        // Step 3: Merge budgets with expenses (only for 'expense' type)
         const spendingData = budgets.map((budget) => {
-            // Find the matching expense for the budget category
-            const expenseData = expenses.find(
-                (expense) => expense.category === budget.category  // Matching by category name now
+            const expenseRecord = expenses.find(
+                (exp) =>
+                    exp.categoryId.toString() === budget.categoryId.toString() &&
+                    exp.expenseType === 'expense'
             );
 
             return {
                 category: budget.category,
-                spent: expenseData ? expenseData.totalSpent : 0,
                 budget: budget.totalBudget,
+                spent: expenseRecord ? expenseRecord.totalSpent : 0,
             };
         });
 
-        // Return the final spending data
-        res.json(spendingData);
+        // Step 4: Also return total income per category (optional)
+        const incomeData = expenses
+            .filter((exp) => exp.expenseType === 'income')
+            .map((income) => ({
+                category: income.category,
+                income: income.totalSpent,
+            }));
+
+        // Final combined response
+        res.json({
+            expenses: spendingData, // Actual spend vs budget for 'expense' type
+            incomes: incomeData,    // Income per category
+        });
     } catch (error) {
-        console.error('Error fetching spending data:', error);
-        res.status(500).json({ message: 'Error fetching spending data' });
+        console.error('Error fetching analytics data:', error);
+        res.status(500).json({ message: 'Error fetching analytics data' });
     }
 };

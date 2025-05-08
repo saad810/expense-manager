@@ -51,6 +51,9 @@ const Expenses = () => {
     queryKey: ['get-expenses'],
     queryFn: () => expenseApi.getall(),
     onError: () => message.error('Failed to load expenses'),
+    onSuccess: (data) => {
+      console.log('Fetched expenses:', data);
+    }
   });
 
   const { mutateAsync: deleteExpenses } = useMutation({
@@ -109,7 +112,7 @@ const Expenses = () => {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (text) => `Rs ${text}`,
+      render: (text) => `Rs £{text}`,
     },
     {
       title: 'Date',
@@ -118,6 +121,7 @@ const Expenses = () => {
       render: (text) => moment(text).format('YYYY-MM-DD'),
     },
     { title: 'Description', dataIndex: 'description', key: 'description' },
+    { title: 'Type', dataIndex: 'expenseType', key: 'expenseType' },
     {
       title: 'Actions',
       key: 'actions',
@@ -192,7 +196,7 @@ const Expenses = () => {
               <Statistic
                 title="Total Spending"
                 value={savingsData?.analytics.totalSpending}
-                prefix="$"
+                prefix="£"
                 valueStyle={{ color: '#cf1322' }}
               />
             </Card>
@@ -202,7 +206,7 @@ const Expenses = () => {
               <Statistic
                 title="Total Budget"
                 value={savingsData?.analytics.totalBudget}
-                prefix="$"
+                prefix="£"
                 valueStyle={{ color: '#3f8600' }}
               />
             </Card>
@@ -221,7 +225,7 @@ const Expenses = () => {
               <Statistic
                 title="Potential Savings"
                 value={savingsData?.analytics.potentialSavings || 0}
-                prefix="$"
+                prefix="£"
                 valueStyle={{ color: '#52c41a' }}
               />
             </Card>
@@ -231,7 +235,7 @@ const Expenses = () => {
               <Statistic
                 title="Remaining Budget"
                 value={savingsData?.analytics.remainingBudget}
-                prefix="$"
+                prefix="£"
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>

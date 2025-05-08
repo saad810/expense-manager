@@ -17,14 +17,14 @@ const calculateSavingsSuggestion = (spent, budget) => {
   if (spent > budget) {
     const overspend = spent - budget;
     return {
-      suggestion: `You’ve overspent by $${overspend}. Try reducing your spending in this category.`,
+      suggestion: `You’ve overspent by £${overspend}. Try reducing your spending in this category.`,
       color: 'red',
       icon: <ArrowDownOutlined />,
     };
   } else {
     const potentialSavings = budget - spent;
     return {
-      suggestion: `You can save an extra $${potentialSavings} in this category by cutting back.`,
+      suggestion: `You can save an extra £${potentialSavings} in this category by cutting back.`,
       color: 'green',
       icon: <ArrowUpOutlined />,
     };
@@ -50,8 +50,8 @@ const AutomatedSavingsSuggestions = () => {
                 extra={<PieChartOutlined />}
                 style={{ marginBottom: '20px' }}
               >
-                <Text>Spent: ${data.spent}</Text><br />
-                <Text>Budget: ${data.budget}</Text><br />
+                <Text>Spent: £{data.spent}</Text><br />
+                <Text>Budget: £{data.budget}</Text><br />
                 <Divider />
                 <Text strong style={{ color: color }}>
                   {icon} {suggestion}

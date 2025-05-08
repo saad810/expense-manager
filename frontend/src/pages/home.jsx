@@ -16,10 +16,7 @@ import {
     LockOutlined, // Security icon
     SafetyCertificateOutlined, // Security icon
     SecurityScanFilled, // Security icon
-    TwitterOutlined, // Footer icon
-    LinkedinOutlined, // Footer icon
-    GithubOutlined // Footer icon
-} from '@ant-design/icons';
+ } from '@ant-design/icons';
 import "./home.css"
 
 // --- Ant Design Components ---
@@ -30,15 +27,6 @@ const { Step } = Steps;
 
 // --- Header Component ---
 const AppHeader = () => {
-    const handleAnchorClick = (e, link) => {
-        e.preventDefault();
-        const targetId = link.href.substring(1);
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
-
     return (
         <AntHeader className="app-header">
             <div className="header-container">
@@ -48,15 +36,6 @@ const AppHeader = () => {
                     <span style={{ marginLeft: '10px', fontSize: '20px', fontWeight: 'bold' }}>Smart Spend</span>
                 </div>
 
-                {/* Navigation */}
-                {/* <Anchor className="header-nav" affix={false}>
-                    <Anchor.Link href="#features" title="Features" onClick={handleAnchorClick} />
-                    <Anchor.Link href="#how-it-works" title="How It Works" onClick={handleAnchorClick} />
-                    <Anchor.Link href="#dashboard" title="Dashboard" onClick={handleAnchorClick} />
-                    <Anchor.Link href="#security" title="Security" onClick={handleAnchorClick} />
-                </Anchor> */}
-
-                {/* Action Buttons */}
                 <Space className="header-buttons">
                     <Button
                         icon={<LoginOutlined />}
@@ -85,7 +64,6 @@ const HeroSection = () => (
     <div id="hero" className="section section-light hero-section">
         <Row align="middle" justify="space-around" gutter={[48, 48]} style={{ width: '100%' }}>
             <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                {/* Placeholder for a large, clean graphic/illustration */}
                 <AreaChartOutlined style={{ fontSize: '250px', color: '#e6f7ff' }} />
             </Col>
             <Col xs={24} md={12} className="hero-content">
@@ -248,11 +226,6 @@ const AppFooter = () => {
     return (
         <AntFooter className="app-footer">
             <Space direction="vertical" size="middle" style={{ width: '100%', alignItems: 'center' }}>
-                <Space>
-                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="footer-link">Privacy Policy</a>
-                    <Text type="secondary">|</Text>
-                    <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="footer-link">Terms of Service</a>
-                </Space>
                 <Text type="secondary">
                     © {currentYear} FinManage. All Rights Reserved.
                 </Text>

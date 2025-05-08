@@ -6,7 +6,7 @@ import Budget from "../models/budget.models.js";
 export const getTotalSpending = async (userId) => {
     try {
         const totalSpending = await Expense.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            { $match: { userId: new mongoose.Types.ObjectId(userId), expenseType: 'expense' } },
             { $group: { _id: null, totalSpending: { $sum: '$amount' } } }
         ]);
         return totalSpending.length ? totalSpending[0].totalSpending : 0;
@@ -15,6 +15,7 @@ export const getTotalSpending = async (userId) => {
         throw new Error("Error fetching total spending");
     }
 };
+
 
 // Get Total Budget
 export const getTotalBudget = async (userId) => {
@@ -34,7 +35,7 @@ export const getTotalBudget = async (userId) => {
 export const getOverspentCategories = async (userId) => {
     try {
         const overspent = await Expense.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            { $match: { userId: new mongoose.Types.ObjectId(userId), expenseType: 'expense' } },
             { $group: { _id: '$category', totalSpending: { $sum: '$amount' } } },
             {
                 $lookup: {
@@ -72,8 +73,20 @@ export const getPotentialSavings = async (userId) => {
             {
                 $lookup: {
                     from: 'expenses',
-                    localField: 'category',
-                    foreignField: 'category',
+                    let: { categoryId: '$category' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$category', '$$categoryId'] },
+                                        { $eq: ['$userId', new mongoose.Types.ObjectId(userId)] },
+                                        { $eq: ['$expenseType', 'expense'] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     as: 'expenseData'
                 }
             },

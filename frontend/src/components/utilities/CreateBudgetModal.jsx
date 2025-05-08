@@ -194,7 +194,7 @@ export const CreateBudgetModal = ({
                             min={0}
                             style={{ width: '100%' }}
                             placeholder="Enter limit"
-                            addonBefore="USD"
+                            addonBefore="£"
                         />
                     </Form.Item>
                 </Form>
